@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evaluating Chance Creation with xThreat</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg-dark: #120303;       
+    --bg-light: #240808;      
+    --ink: #f2e8e8;           
+    --ink-muted: #b59b9b;     
+    --accent: #d4af37;        
+    --border: rgba(212, 175, 55, 0.15); 
+    
+    --serif: 'Lora', serif;
+    --sans: 'Inter', sans-serif;
+  }
+
+  html, body {
+    width: 100%;
+    min-height: 100vh;
+    margin: 0; 
+    padding: 0;
+    box-sizing: border-box;
+    background-color: var(--bg-dark);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-weight: 300;
+    line-height: 1.7;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+  }
+
+  *, *::before, *::after {
+    box-sizing: inherit;
+  }
+
+  section {
+    width: 100%;
+    padding: 80px 5vw;
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .hero {
+    min-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+  }
+
+  .hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(212, 175, 55, 0.05) 1px, transparent 1px);
+    background-size: 30px 30px;
+    z-index: 0;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-weight: 500;
+    line-height: 1.15;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero-sub {
+    font-size: 1.15rem;
+    color: var(--ink-muted);
+    max-width: 700px;
+    line-height: 1.8;
+  }
+
+  .section-overline {
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.5rem;
+    border-left: 3px solid var(--accent);
+    padding-left: 16px;
+  }
+
+  .section-heading {
+    font-family: var(--serif);
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    font-weight: 500;
+    line-height: 1.2;
+    margin-bottom: 2rem;
+  }
+
+  .section-heading em { 
+    font-style: italic; 
+    color: var(--accent);
+  }
+
+  .section-body {
+    font-size: 1.1rem;
+    color: var(--ink);
+    max-width: 800px; 
+    margin-bottom: 2rem;
+  }
+
+  .section-body p + p { margin-top: 1.5em; }
+  .section-body strong { font-weight: 600; color: #ffffff; }
+
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 0 auto;
+    max-width: 84vw;
+  }
+
+  .interactive-embed-wrapper {
+    background: var(--bg-light); 
+    border: 1px solid var(--border);
+    border-top: 4px solid var(--accent); 
+    border-radius: 8px;
+    margin: 4rem 0;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+    overflow: hidden;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .interactive-embed-wrapper iframe {
+    width: 100%;
+    max-width: 950px;
+    border: none;
+    background: transparent; 
+    padding-top: 2rem;
+  }
+
+  .embed-caption {
+    width: 100%;
+    padding: 1.5rem 2rem;
+    font-family: var(--sans);
+    font-size: 0.95rem;
+    color: var(--ink-muted);
+    line-height: 1.6;
+    border-top: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.2); 
+  }
+
+  .embed-caption strong { 
+    color: var(--accent); 
+    font-weight: 500; 
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+  }
+
+  .fade-up {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  .fade-up.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  footer {
+    width: 100%;
+    padding: 60px 5vw;
+    border-top: 1px solid var(--border);
+    background: var(--bg-light);
+  }
+
+  .footer-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 32px;
+  }
+
+  .footer-title {
+    font-family: var(--serif);
+    font-size: 1.4rem;
+    font-weight: 500;
+    margin-bottom: 12px;
+    color: var(--ink);
+  }
+
+  footer p {
+    font-size: 0.85rem;
+    color: var(--ink-muted);
+    line-height: 1.8;
+  }
+
+  .footer-right strong {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  @media (max-width: 768px) {
+    section { padding: 60px 5vw; }
+    .hero { padding: 80px 5vw; }
+    .footer-container { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="container hero-content fade-up">
+    <h1>Evaluating Chance Creation with <em>Expected Threat (xT)</em></h1>
+    <div class="hero-sub">
+      <p>In this article, I aim to measure the value of passing beyond simple volume. I do this by using Expected Threat (xT) as the core framework, while also addressing some of its tactical blind spots using tracking data proxies. The goal is to reduce the model’s weaknesses and better identify the players who genuinely raise their team’s probability of scoring.</p>
+    </div>
+  </div>
+</section>
+
+<section id="intro">
+  <div class="container fade-up">
+    <div class="section-overline">Introduction</div>
+    <h2 class="section-heading">How do we quantify the value of <em>passes?</em></h2>
+    <div class="section-body">
+      <p>Chance creation is one of football’s most important skills, yet traditional stat sheets often fail to capture it properly. When a dangerous pass does not end in a goal or an assist, its value can easily be overlooked. This creates a common problem in player evaluation: credit is usually given only for the final pass, while the earlier line-breaking ball that moved possession into a dangerous area is ignored. So how can we credit the right player for creating danger? And, with that in mind, who was the Premier League’s most dangerous passer in the 2015/16 season?</p>
+      
+      <p>In a previous article, I used VAEP (Valuing Actions by Estimating Probabilities), a commonly used probabilistic classifier framework that values all on-ball actions using various contextual features. In this article, I instead use Expected Threat (xT). xT differs in that it is based on Markov chains: it evaluates the probability of scoring a goal based on the ball’s position on the pitch and the likelihood of either shooting, passing, or dribbling from that location. This allows us to evaluate each action taken by the player—shooting, passing, or dribbling—according to how it changes the probability of scoring.</p>
+      
+      <p>By contrast, VAEP uses contextual features such as the previous three events, time remaining in the match, and score difference, whereas xT is purely location-based and, in classic Markov chain fashion, does not require dependent events (the previous football state) to predict future outcomes. Some limitations do lie with an xT framework. Because it lacks contextual game dynamics, it can only capture ball-progressing actions that move the ball from one zone to another, and it does not consider the risk attached to certain actions, such as the likelihood of an interception or tackle. Therefore, xT would be unfavourable for a full tactical analysis. However, for the purpose of assessing player strength, xT provides greater stability in capturing the true quality of players over the course of a season compared to VAEP, while also offering easier interpretability.</p>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="methodology">
+  <div class="container fade-up">
+    <div class="section-overline">The Model</div>
+    <h2 class="section-heading">Methods for creating <em>xThreat model</em></h2>
+    
+    <div class="section-body">
+      <p>One of the most reliable gold-standard options for building an xT model is the <code>socceraction</code> Python package, which contains a dedicated <code>xthreat.py</code> module that provides the code needed to calculate and train pitch-grid probability matrices. This works particularly well with StatsBomb data, as the package directly converts event data into SPADL format. However, this approach requires a considerable amount of historical season data to train the xT model accurately.</p>
+      
+      <p>As an alternative, the model in this article uses Karun Singh’s pre-computed 12x8 xT value surface to bypass that data-availability barrier. Although more granular xT surfaces are now available, Karun Singh’s 12x8 model remains one of the most reliable and easily interpretable approaches for calculating xT.</p>
+    </div>
+
+    <div class="interactive-embed-wrapper fade-up">
+      <iframe src="interactive-xT.html" height="850" scrolling="no"></iframe>
+      <div class="embed-caption">
+        <strong>INTERACTIVE 12x8 PITCH PLOT</strong> <br> Each zone in the 12x8 grid represents the likelihood that a dangerous action will emerge from that location, whether through a shot or through the expected future value generated by moving the ball there. We can assess the value of each pass by calculating xT added as <em>end xT minus start xT</em>.
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>From StatsBomb, we can extract all passes made in the 2015/16 Premier League season, including the start and end locations of the ball for both the passer and the recipient.</p>
+      
+      <p><strong>The data</strong><br>
+      The data contained 226,920 successful open play passes from 380 Premier League matches during the 2015/16 season. Initially including all successful passes found set-piece takers disproportionately rewarded from taking corners, free kicks, and throw-ins, generating high xT values; I therefore restricted the dataset to open play passes only. Applying a 900-minute minimum to exclude players whose xT per 90 figures were inflated by limited playing time. Only midfielders have been used during illustrations.</p>
+
+      <p>Statsbomb event data does not provide a minute played column for each player during a season. With two main options to get minutes played; previously I have used complex coding scripts to attempt to calculate stoppage time, red cards, and exact substitution timestamps for all games to give an aggregated value of minutes played for each player. This time I web scraped Fbref website for the 15/16 season which contains exact minutes played for every player and merged it with the xT data to give us per 90 values.</p>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="validation">
+  <div class="container fade-up">
+    <div class="section-overline">Data Application</div>
+    <h2 class="section-heading">The Elite Playmakers: Validation Through the <em>Eye Test</em></h2>
+    
+    <div class="interactive-embed-wrapper fade-up">
+      <iframe src="midfielders_xt_top15.html" height="800" scrolling="no"></iframe>
+      <div class="embed-caption">
+        <strong>ELITE CHANCE CREATORS</strong> <br> The model successfully isolates the players who take calculated risks to progress the ball, rather than those who simply recycle possession harmlessly along the backline which pads their pass completion percentages.
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>When we filter the dataset for players with over 900 minutes and rank their xT per 90, the results provide an immediate validation for the model. The list is intuitive, featuring the likes of Kevin De Bruyne, Mesut Özil, Eden Hazard, Dimitri Payet, etc; With Ozil’s 2015/16 campaign registering a strong 19 assists and 146 chances created.</p>
+      
+      <p>This suggests the effectiveness of xThreat at identifying players who can consistently move the ball into highly threatening zones. However, while Expected Threat is an important leap forward from basic counting stats like assists, it is not a perfect metric. To truly assess the quality of a playmaker, we must understand the blind spots of the model.</p>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="limitations">
+  <div class="container fade-up">
+    <div class="section-overline">Limitations</div>
+    <h2 class="section-heading">The Context Deficit: <em>Tactics and Volume</em></h2>
+    
+    <div class="section-body">
+      <p>The first major limitation of xThreat is its inability to account for tactical frameworks. Because xT is an additive metric, it heavily favours players operating in high-possession, dominant teams. A player like De Bruyne at Manchester City is operating within a system designed to camp in the opponent's half, granting him dozens of opportunities per match to play passes in the final third.</p>
+
+      <p>Compare this to a highly creative midfielder playing for a low-block, counter-attacking side. That player may only get three or four opportunities a game to launch a progressive pass. Even if their passes are equally brilliant, the sheer volume difference will result in the Manchester City player generating a vastly higher xT per 90. The metric tells us who generated the most threat, but it struggles to tell us how much of that threat was individual brilliance versus systemic dominance.</p>
+
+      <p><strong>Event Data vs Tracking Data</strong><br>
+      Another critical limitation is that standard Expected threat models are built entirely on event data. Though powerful, event data only sees the ball, but football is much more than that, it completely ignores everything else happening on the pitch. To an event-based xT model, the pitch is a ghost town inhabited only by the ball.</p>
+      
+      <p>It does not know where the players are. It does not know if a pass was played into acres of open space, or if it was threaded through the legs of three defenders. Because of this, standard xT routinely undervalues line-breaking passes. If a deep-lying playmaker splits a team's midfield with a brilliant 15-yard pass, bypassing four opponents, that pass is incredibly valuable to the team's attack. However, if that pass merely moves the ball from the centre circle to the edge of the attacking third, the grid-based xT model might only award it a low value pass, completely blind to the defensive structure that was bypassed.</p>
+
+      <p><strong>Adding Context with Tracking Data</strong><br>
+      If we want to better quantify playmaking ability, we need to give our model eyes. Incorporating tracking data provides us added context of player locations during any event action. By layering tracking data over our expected threat framework, we can transition from theoretical threat to contextual reality.</p>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="conceptual-idea">
+  <div class="container fade-up">
+    <div class="section-overline">Situational Context</div>
+    <h2 class="section-heading">Conceptual <em>Idea</em></h2>
+
+    <div class="section-body">
+      <p>We must account for situational contexts. I have opted to consider two critical conceptual elements of playmaking: vertical bypassing and horizontal stretching.</p>
+      
+      <p><strong>Vertical Bypassing</strong><br>
+      Some passes are placed in low danger zones of the pitch but can completely devastate an opponent’s defensive shape and create counter attacking situations; Consider a deep-lying midfielder facing a relentless, organized high press. If the midfielder threads a 40-yard pass from the edge of their own box to a striker on the halfway line, a standard xT model registers a negligible increase in threat because the ball is nowhere near the final third.</p>
+      
+      <p>However, tracking data can reveal the tactical devastation of that pass. By drawing a line from the start of the pass to the end, we can calculate exactly how many opponents were caught behind the ball. This concept might reveal that this single pass took six opposing players completely out of the game. The ability to shatter a modern Gegenpress from deep is every bit as valuable as threading a final ball into the penalty box, and tracking data allows us to quantify it.</p>
+
+      <p><strong>Horizontal Stretching</strong><br>
+      Not all horizontal passes are risk adverse recycling passes; Against any elite team it is necessary to stretch the opponents to force open spaces for the attackers to capitalise. When a midfielder hits a long switch of play, tracking data models register a massive spike in the opponent’s defensive surface area.</p>
+      
+      <p>The defence has been stretched. By quantifying Shape Disruption, we can credit players like Paul Scholes, Xabi Alonso, or Toni Kroos—players whose primary genius wasn’t necessarily threading the final killer ball through the lines, but rather stretching the opponent from side to side until a gap appeared for a teammate to exploit. Ultimately, elite playmaking isn’t just about moving the ball into a dangerous zone; It is about manipulating the opponent’s defensive structure—either by piercing through it or stretching it apart—so those zones become vulnerable in the first place.</p>
+
+      <p><strong>Data structuring</strong><br>
+      In an ideal world with access to 2015/16 premier league tracking data, we could directly count the number of defenders bypassed to give us a vertical bypassing value and calculate the surface area of the convex hull (around all defending players) to measure defensive disruption for any given pass. But in this situation, I have used proxies that aren’t perfect but get around the data limitation whilst still providing some extra context.</p>
+
+      <p>Since we cannot count the exact number of defenders bypassed, I instead measure the sheer vertical distance the ball travelled toward the opponent’s goal line in a successful open play pass. For horizontal stretching I look at the lateral distance of a successful pass. These proxies at not suitable for high level performance analysis however are used for illustrative purposes of how the conceptual idea can be implemented.</p>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="playmakers">
+  <div class="container fade-up">
+    <div class="section-overline">Analysis</div>
+    <h2 class="section-heading">Finding the Ultimate <em>Playmaker</em></h2>
+
+    <div class="interactive-embed-wrapper fade-up">
+      <iframe src="midfielders_only_profiles2.html" height="750" scrolling="no"></iframe>
+      <div class="embed-caption">
+        <strong>MIDFIELDER Z SCORES</strong> <br> Instead of measuring raw output, Z-Score measures impact relative to the rest of the league. It takes the average Premier League midfielder, sets them at "Zero", and calculates exactly how far above (or below) average a specific player is for any given skill.
+      </div>
+    </div>
+
+    <div class="section-body">
+      <p>The interactive graph above gives us the z scores of vertical bypassing, horizontal stretching and expected threat to equally evaluate all midfielders during the 15/16 premier league season. When highlighting Mesut Ozil and Kevin De Bruyne we see the separation between the league average and the elite midfielders that consistently placed the ball in dangerous areas.</p>
+      
+      <p>We can see players such as Michael Carrick who contributed strongly to the 3 playmaking features presented, does this suggest a potentially underrated player during the premier league 15/16 season? due to his age (34 at the time) and low assist count perhaps not, but the proxy visualisation suggests potential hidden value behind the traditional counting stats.</p>
+      
+      <p><strong>What must be considered</strong><br>
+      An important note is that, in football analytics we should not confuse progression and penetration as the same thing, a pass can move the ball forward whilst not changing the landscape of the game, whilst a short 5-meter pass can break an entire block completely altering an outcome. We cannot treat these proxies of distance covered as anything truly conducive of a strong midfielder.</p>
+
+      <p>Within this concept we only assess chance creation based on the spatial value of a pass with xThreat; and given a pass how much space has it created with vertical bypassing and horizontal stretching. Passes are also dependent on a time window; situations arise where passes are received in high value areas but in poor time causing the receiver to have little time or space to effectively use the pass.</p>
+
+      <p>The research paper titled “Valuing La Pause: Quantifying Optimal Pass Timing Beyond Speed” by Minho Lee, Geonhee Jo, Miru Hong, Pascal Bauer, and Sang-Ki Ko investigates passing as a temporal judgmental, dependent on whether the player maximized the passing opportunity through not only correct spatial location but optimal timing.</p>
+
+      <p>My dataset focused on midfielders, yet midfielders have vast responsibilities; their roles do not only lie in chance creation; the concept does not factor in roles such as Rodri’s at Man City who, as a holding midfielder demands strong defensive qualities by covering large spaces, recovering possession, blocking central passing lanes, and many other off ball qualities this idea does not cover.</p>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="conclusion">
+  <div class="container fade-up">
+    <div class="section-overline">Conclusion</div>
+    <h2 class="section-heading">What does this <em>concept achieve?</em></h2>
+    
+    <div class="section-body">
+      <p>The concept goes a step further from xThreat of valuing action based only on pitch location but also assesses the effects of a given pass on defensive structures, testing if it stretches or penetrates a defensive line to breaking point. xThreat solved an important issue in quantifying the “pre-assist”, by additionally highlighting players who consistently manipulate, dismantle and break down defensive structures to make those final actions possible scouts can discover invisible orchestrators of the pitch.</p>
+
+      <p><strong>Suppressing the threat</strong><br>
+      this model transitions from recruitment to Opposition Analysis. When preparing for an upcoming fixture, analysts can use these specific Z-score profiles to dictate a team's out-of-possession strategy. If an upcoming opponent relies on elite "Vertical Bypassing" scores to produce threat, the defensive strategy must prioritize central compactness and blocking passing lanes (cover shadows) to prevent the lines from being split.</p>
+      
+      <p>Conversely, if the opponent's register elite "Horizontal Stretching" metrics, the tactical priority shifts. The defending team knows they will be subjected to rapid switches of play, meaning their wingers must be defensively disciplined, and the backline must be drilled to slide laterally as a cohesive unit without leaving gaps. By identifying how a player and team generate threat, analysts can design the exact defensive mechanism required to suppress them.</p>
+
+      <p>A common critique of raw Expected Threat is that it is too abstract to present to a manager. It lacks tactical richness and relies on showing a manager abstract values which rightfully so is usually met with scepticism. However, by evolving the model to include Tracking Data—measuring actual defenders bypassed and structural shape disruption—the data is translated back into the language of football.</p>
+
+      <p>The model no longer just says, "This pass was worth +0.02 xT." It says, "This pass eliminated the opponent's midfield pivot and forced their backline into a retreating scramble." Ultimately, Expected Threat should not be viewed as the final answer to tactical analysis, but rather as a layer. When combined with these contextual metrics, is it good enough as a tactical analysis tool? Or is there still missing context xThreat cannot account for?</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-container fade-up">
+    <div class="footer-left">
+      <div class="footer-title">Evaluating Chance Creation</div>
+      <p>Football Analytics &nbsp;·&nbsp; Expected Threat (xT) Framework<br>
+      Data: StatsBomb (2015/16) · Fbref</p>
+    </div>
+    
+    <div class="footer-right">
+      <p>By Alvaro Shaw<br>
+      <strong>Performance Analysis Project</strong></p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const observerElements = document.querySelectorAll('.fade-up');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target); 
+        }
+      });
+    }, { 
+      threshold: 0.1, 
+      rootMargin: "0px 0px -20px 0px"
+    });
+
+    observerElements.forEach((el) => observer.observe(el));
+  });
+</script>
+
+</body>
+</html>
